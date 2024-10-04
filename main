@@ -1,0 +1,135 @@
+import java.io.*;
+import java.util.ArrayList;
+import java.util.InputMismatchException;
+import java.util.List;
+import java.util.Scanner;
+
+public class Main {
+    private static final String CAMINHO_ARQUIVO = "src/tarefas.txt";
+    private static List<String> listaTarefas = new ArrayList<>();
+    private static List<Boolean> listaTarefasConcluidas = new ArrayList<>();
+
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("=== Gerenciamento de Tarefas ===");
+        carregarTarefasDoArquivo();
+
+        while (true) {
+            System.out.println("Selecione uma opção:\n" +
+                    "[0] Sair\n" +
+                    "[1] Adicionar Tarefa\n" +
+                    "[2] Listar Tarefas Salvas\n" +
+                    "[3] Salvar Tarefas\n" +
+                    "[4] Marcar Tarefa como Concluída"
+            );
+
+            int opcao = scanner.nextInt();
+            scanner.nextLine(); // Consumir a nova linha
+
+            switch (opcao) {
+                case 0:
+                    System.out.println("=== Saindo... ===");
+                    return;
+                case 1:
+                    adicionarTarefa(scanner);
+                    break;
+                case 2:
+                    listarTarefas();
+                    break;
+                case 3:
+                    salvarTarefas();
+                    break;
+                case 4:
+                    marcarTarefaConcluida(scanner);
+                    break;
+                default:
+                    System.out.println("Opção inválida. Tente novamente.");
+            }
+        }
+    }
+
+    private static void carregarTarefasDoArquivo() {
+        try (BufferedReader br = new BufferedReader(new FileReader(CAMINHO_ARQUIVO))) {
+            String linha;
+            while ((linha = br.readLine()) != null) {
+                listaTarefas.add(linha);
+                listaTarefasConcluidas.add(false);
+            }
+        } catch (IOException e) {
+            System.out.println("Erro ao carregar tarefas: " + e.getMessage());
+        }
+    }
+
+    private static void adicionarTarefa(Scanner scanner) {
+        System.out.println("=== Adicionar Tarefa ===");
+        System.out.println("Digite uma nova tarefa:");
+        String tarefa = scanner.nextLine().trim();
+
+        if (tarefa.isEmpty()) {
+            System.out.println("Tarefa não pode estar vazia!");
+            return;
+        }
+
+        if (listaTarefas.contains(tarefa)) {
+            System.out.println("Tarefa já existe!");
+            return;
+        }
+
+        listaTarefas.add(tarefa);
+        listaTarefasConcluidas.add(false);
+        System.out.println("=== Tarefa [" + tarefa + "] adicionada com sucesso ===");
+    }
+
+    private static void listarTarefas() {
+        System.out.println("=== Listar Tarefas Salvas ===");
+        if (listaTarefas.isEmpty()) {
+            System.out.println("Nenhuma tarefa salva.");
+        } else {
+            for (int i = 0; i < listaTarefas.size(); i++) {
+                String status = listaTarefasConcluidas.get(i) ? "[Concluída]" : "[Pendente]";
+                System.out.println("[" + (i + 1) + "] " + status + " " + listaTarefas.get(i));
+            }
+        }
+        System.out.println("======================");
+    }
+
+    private static void salvarTarefas() {
+        System.out.println("=== Salvar Tarefas ===");
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter(CAMINHO_ARQUIVO, false))) {
+            for (String tarefa : listaTarefas) {
+                bw.write(tarefa);
+                bw.newLine();
+            }
+            System.out.println("=== Tarefas salvas com sucesso ===");
+        } catch (IOException e) {
+            System.out.println("Erro ao salvar tarefas: " + e.getMessage());
+        }
+    }
+
+    private static void marcarTarefaConcluida(Scanner scanner) {
+        System.out.println("=== Marcar Tarefa como Concluída ===");
+        if (listaTarefas.isEmpty()) {
+            System.out.println("Não há tarefas para marcar.");
+            return;
+        }
+        listarTarefas();
+        System.out.println("Digite o número da tarefa a ser marcada como concluída:");
+
+        while (true) {
+            try {
+                int indice = scanner.nextInt() - 1;
+
+                if (indice >= 0 && indice < listaTarefas.size()) {
+                    listaTarefasConcluidas.set(indice, true);
+                    System.out.println("Tarefa [" + listaTarefas.get(indice) + "] marcada como concluída!");
+                    break;
+                } else {
+                    System.out.println("Número inválido. Tente novamente.");
+                }
+            } catch (InputMismatchException e) {
+                System.out.println("Entrada inválida. Por favor, digite um número.");
+                scanner.nextLine();
+            }
+        }
+    }
+}
